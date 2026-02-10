@@ -1,5 +1,5 @@
 output "vpc_id" {
-  value       = aws_vpc.terraform_vpc.id
+  value = aws_vpc.terraform_vpc.id
   description = "VPC ID"
 }
 
@@ -14,12 +14,12 @@ output "igw_id" {
 }
 
 output "public_subnet_ids" {
-  value       = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+  value       = aws_subnet.public_subnets[*].id
   description = "Public subnet IDs"
 }
 
 output "private_subnet_ids" {
-  value       = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
+  value       = aws_subnet.private_subnets[*].id
   description = "Private subnet IDs"
 }
 

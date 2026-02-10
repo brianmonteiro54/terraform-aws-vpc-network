@@ -1,6 +1,10 @@
 # =============================================================================
-# locals
+# Data Sources & Locals
 # =============================================================================
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 locals {
   common_tags = {
     Environment = var.tag_environment
@@ -9,7 +13,7 @@ locals {
 }
 
 # =============================================================================
-# VPC
+# VPC & IGW
 # =============================================================================
 resource "aws_vpc" "terraform_vpc" {
   cidr_block = var.vpc_cidr_block
@@ -18,9 +22,6 @@ resource "aws_vpc" "terraform_vpc" {
   })
 }
 
-# =============================================================================
-# Internet Gateway
-# =============================================================================
 resource "aws_internet_gateway" "terraform_igw" {
   vpc_id = aws_vpc.terraform_vpc.id
   tags = merge(local.common_tags, {
@@ -31,29 +32,16 @@ resource "aws_internet_gateway" "terraform_igw" {
 # =============================================================================
 # Public Subnets
 # =============================================================================
-resource "aws_subnet" "public_subnet_1" {
+resource "aws_subnet" "public_subnets" {
+  count             = length(var.public_subnet_cidrs)
   vpc_id            = aws_vpc.terraform_vpc.id
-  cidr_block        = var.public_subnet_cidrs[0]
-  availability_zone = var.availability_zones[0]
+  cidr_block        = var.public_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   map_public_ip_on_launch = var.public_subnet_map_public_ip
 
   tags = merge(local.common_tags, {
-    Name                                        = var.public_subnet_names[0]
-    "kubernetes.io/role/elb"                    = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  })
-}
-
-resource "aws_subnet" "public_subnet_2" {
-  vpc_id            = aws_vpc.terraform_vpc.id
-  cidr_block        = var.public_subnet_cidrs[1]
-  availability_zone = var.availability_zones[1]
-
-  map_public_ip_on_launch = var.public_subnet_map_public_ip
-
-  tags = merge(local.common_tags, {
-    Name                                        = var.public_subnet_names[1]
+    Name                                        = var.public_subnet_names[count.index]
     "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   })
@@ -62,34 +50,42 @@ resource "aws_subnet" "public_subnet_2" {
 # =============================================================================
 # Private Subnets
 # =============================================================================
-resource "aws_subnet" "private_subnet_1" {
+resource "aws_subnet" "private_subnets" {
+  count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.terraform_vpc.id
-  cidr_block        = var.private_subnet_cidrs[0]
-  availability_zone = var.availability_zones[0]
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(local.common_tags, {
-    Name                                        = var.private_subnet_names[0]
-    "kubernetes.io/role/internal-elb"           = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  })
-}
-
-resource "aws_subnet" "private_subnet_2" {
-  vpc_id            = aws_vpc.terraform_vpc.id
-  cidr_block        = var.private_subnet_cidrs[1]
-  availability_zone = var.availability_zones[1]
-
-  tags = merge(local.common_tags, {
-    Name                                        = var.private_subnet_names[1]
+    Name                                        = var.private_subnet_names[count.index]
     "kubernetes.io/role/internal-elb"           = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   })
 }
 
 # =============================================================================
-# Public Route Table
+# NAT Gateway & EIPs
 # =============================================================================
-resource "aws_route_table" "public_route_table" {
+resource "aws_eip" "nat_eips" {
+  count  = length(var.public_subnet_cidrs)
+  domain = "vpc"
+  tags   = { Name = var.nat_eip_names[count.index] }
+}
+
+resource "aws_nat_gateway" "nat_gateways" {
+  count         = length(var.public_subnet_cidrs)
+  allocation_id = aws_eip.nat_eips[count.index].id
+  subnet_id     = aws_subnet.public_subnets[count.index].id
+
+  tags = merge(local.common_tags, {
+    Name = var.nat_gateway_names[count.index]
+  })
+}
+
+# =============================================================================
+# Routing
+# =============================================================================
+resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.terraform_vpc.id
 
   route {
@@ -97,91 +93,29 @@ resource "aws_route_table" "public_route_table" {
     gateway_id = aws_internet_gateway.terraform_igw.id
   }
 
-  tags = merge(local.common_tags, {
-    Name = var.public_rt_name
-  })
+  tags = merge(local.common_tags, { Name = var.public_rt_name })
 }
 
-resource "aws_route_table_association" "public_subnet_1_association" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_route_table.id
+resource "aws_route_table_association" "public_assoc" {
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = aws_subnet.public_subnets[count.index].id
+  route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_route_table_association" "public_subnet_2_association" {
-  subnet_id      = aws_subnet.public_subnet_2.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-# =============================================================================
-# NAT Gateway
-# =============================================================================
-resource "aws_eip" "nat_eip_1" {
-  domain = "vpc"
-  tags = {
-    Name = var.nat_eip_names[0]
-  }
-}
-
-resource "aws_eip" "nat_eip_2" {
-  domain = "vpc"
-  tags = {
-    Name = var.nat_eip_names[1]
-  }
-}
-
-resource "aws_nat_gateway" "nat_gateway_1" {
-  allocation_id = aws_eip.nat_eip_1.id
-  subnet_id     = aws_subnet.public_subnet_1.id
-
-  tags = merge(local.common_tags, {
-    Name = var.nat_gateway_names[0]
-  })
-}
-
-resource "aws_nat_gateway" "nat_gateway_2" {
-  allocation_id = aws_eip.nat_eip_2.id
-  subnet_id     = aws_subnet.public_subnet_2.id
-
-  tags = merge(local.common_tags, {
-    Name = var.nat_gateway_names[1]
-  })
-}
-
-# =============================================================================
-# Private Route Tables
-# =============================================================================
-resource "aws_route_table" "private_route_table_1" {
+resource "aws_route_table" "private_rts" {
+  count  = length(var.private_subnet_cidrs)
   vpc_id = aws_vpc.terraform_vpc.id
 
   route {
     cidr_block     = var.default_ipv4_cidr
-    nat_gateway_id = aws_nat_gateway.nat_gateway_1.id
+    nat_gateway_id = aws_nat_gateway.nat_gateways[count.index].id
   }
 
-  tags = merge(local.common_tags, {
-    Name = var.private_rt_names[0]
-  })
+  tags = merge(local.common_tags, { Name = var.private_rt_names[count.index] })
 }
 
-resource "aws_route_table" "private_route_table_2" {
-  vpc_id = aws_vpc.terraform_vpc.id
-
-  route {
-    cidr_block     = var.default_ipv4_cidr
-    nat_gateway_id = aws_nat_gateway.nat_gateway_2.id
-  }
-
-  tags = merge(local.common_tags, {
-    Name = var.private_rt_names[1]
-  })
-}
-
-resource "aws_route_table_association" "private_subnet_1_association" {
-  subnet_id      = aws_subnet.private_subnet_1.id
-  route_table_id = aws_route_table.private_route_table_1.id
-}
-
-resource "aws_route_table_association" "private_subnet_2_association" {
-  subnet_id      = aws_subnet.private_subnet_2.id
-  route_table_id = aws_route_table.private_route_table_2.id
+resource "aws_route_table_association" "private_assoc" {
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = aws_subnet.private_subnets[count.index].id
+  route_table_id = aws_route_table.private_rts[count.index].id
 }
