@@ -1,6 +1,7 @@
 # =============================================================================
 # Public Subnets
 # =============================================================================
+#checkov:skip=CKV_AWS_130:Public subnets intentionally support auto-assign public IP (controlled via map_public_ip_on_launch variable)
 resource "aws_subnet" "public" {
   count = local.public_subnet_count
 
