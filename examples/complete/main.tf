@@ -11,7 +11,7 @@
 # =============================================================================
 
 module "vpc" {
-  source = "github.com/brianmonteiro54/terraform-aws-vpc-network//modules/rds?ref=main"
+  source = "../../modules/vpc"
 
   # ---------------------------------------------------
   # Required
