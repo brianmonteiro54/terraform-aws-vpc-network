@@ -48,8 +48,8 @@ module "vpc" {
   # Tags
   # ---------------------------------------------------
   tags = {
-    Project   = "my-app"
-    Owner     = "platform-team"
+    Project    = "my-app"
+    Owner      = "platform-team"
     CostCenter = "engineering"
   }
 }
