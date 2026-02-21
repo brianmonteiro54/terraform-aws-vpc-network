@@ -51,7 +51,6 @@ jobs:
       - name: Terraform Format Check
         id: fmt
         run: terraform fmt -check -recursive -diff
-        continue-on-error: true
 
       - name: Terraform Init
         id: init
@@ -146,7 +145,6 @@ jobs:
             --format=compact \
             --recursive \
             --force
-        continue-on-error: true
 
       - name: Comment PR - TFLint
         if: >-
@@ -202,8 +200,7 @@ jobs:
                   --output-file-path \
                     console,checkov-report.json \
                   --quiet \
-                  --skip-check CKV_AWS_119,CKV_AWS_28
-        continue-on-error: true
+                  --skip-check CKV_AWS_119,CKV_AWS_28        
 
       - name: Upload Checkov Report
         if: always()
@@ -278,7 +275,6 @@ jobs:
             --exclude-downloaded-modules \
             --minimum-severity=MEDIUM \
             --format=default
-        continue-on-error: true
 
       - name: Comment PR - tfsec
         if: >-
