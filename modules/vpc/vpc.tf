@@ -1,9 +1,9 @@
 # =============================================================================
 # VPC
 # =============================================================================
-#checkov:skip=CKV2_AWS_11:VPC flow logging is optional and configurable via enable_flow_logs variable
-#checkov:skip=CKV2_AWS_12:Default SG restriction is managed by the aws_default_security_group resource below
 resource "aws_vpc" "this" {
+  # checkov:skip=CKV2_AWS_11:VPC flow logging is optional and configurable via enable_flow_logs variable
+
   cidr_block = var.vpc_cidr
 
   enable_dns_hostnames = var.enable_dns_hostnames
@@ -21,6 +21,7 @@ resource "aws_vpc" "this" {
 # Default Security Group - Restrict all traffic (CKV2_AWS_12)
 # =============================================================================
 resource "aws_default_security_group" "default" {
+  # checkov:skip=CKV2_AWS_12:Default SG restriction is managed here
   vpc_id = aws_vpc.this.id
 
   tags = merge(
