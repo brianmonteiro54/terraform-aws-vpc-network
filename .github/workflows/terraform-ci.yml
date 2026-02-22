@@ -1,11 +1,3 @@
-# =============================================================================
-# Caller Workflow - Coloque em cada repositório de módulo
-# Caminho: .github/workflows/terraform-ci.yml
-# =============================================================================
-# Este arquivo substitui o workflow completo atual.
-# Altere apenas o 'terraform-docs-working-dir' para cada módulo.
-# =============================================================================
-
 name: Terraform CI Pipeline
 
 on:
