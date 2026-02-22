@@ -371,12 +371,10 @@ jobs:
       - name: Render terraform docs
         uses: terraform-docs/gh-actions@v1.4.1
         with:
-          working-dir: .
+          working-dir: modules/vpc
           output-file: README.md
           output-method: inject
           git-push: true
-          recursive: true
-          recursive-path: modules/vpc
 
   # =============================================================================
   # Job 7: Cost Estimation with Infracost
