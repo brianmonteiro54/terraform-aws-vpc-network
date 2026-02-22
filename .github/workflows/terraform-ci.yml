@@ -360,6 +360,8 @@ jobs:
   terraform-docs:
     name: Terraform Documentation
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -367,14 +369,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Render terraform docs
-        uses: terraform-docs/gh-actions@v1.1.0
+        uses: terraform-docs/gh-actions@v1.4.1
         with:
           working-dir: .
           output-file: README.md
           output-method: inject
-          git-push: false
+          git-push: true
           recursive: true
-          recursive-path: modules
+          recursive-path: modules/vpc
 
   # =============================================================================
   # Job 7: Cost Estimation with Infracost

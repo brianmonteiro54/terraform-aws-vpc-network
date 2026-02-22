@@ -117,16 +117,6 @@ terraform-aws-vpc-network/
 ├── README.md
 └── LICENSE
 ```
-
----
-
-## 📖 Documentação Auto-gerada
-
-<!-- BEGIN_TF_DOCS -->
-<!-- END_TF_DOCS -->
-
----
-
 ## 📄 Licença
 
 [MIT License](LICENSE)
