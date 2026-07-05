@@ -27,3 +27,13 @@ output "availability_zones" {
   description = "Availability zones used"
   value       = module.vpc.availability_zones
 }
+
+output "s3_endpoint_id" {
+  description = "ID of the S3 gateway VPC endpoint"
+  value       = module.vpc.s3_endpoint_id
+}
+
+output "dynamodb_endpoint_id" {
+  description = "ID of the DynamoDB gateway VPC endpoint"
+  value       = module.vpc.dynamodb_endpoint_id
+}

@@ -115,6 +115,21 @@ variable "cluster_name" {
 }
 
 # =============================================================================
+# Optional Variables - VPC Gateway Endpoints
+# =============================================================================
+variable "enable_s3_endpoint" {
+  description = "Should be true to create a gateway VPC endpoint for Amazon S3 (no additional AWS charge), associated with the private route tables"
+  type        = bool
+  default     = false
+}
+
+variable "enable_dynamodb_endpoint" {
+  description = "Should be true to create a gateway VPC endpoint for Amazon DynamoDB (no additional AWS charge), associated with the private route tables"
+  type        = bool
+  default     = false
+}
+
+# =============================================================================
 # Optional Variables - Tags
 # =============================================================================
 variable "tags" {

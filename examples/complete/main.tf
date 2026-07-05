@@ -39,6 +39,13 @@ module "vpc" {
   single_nat_gateway = true
 
   # ---------------------------------------------------
+  # VPC Gateway Endpoints (no additional AWS charge)
+  # Route S3/DynamoDB traffic off the NAT Gateway
+  # ---------------------------------------------------
+  enable_s3_endpoint       = true
+  enable_dynamodb_endpoint = true
+
+  # ---------------------------------------------------
   # Optional: Kubernetes (EKS) tag integration
   # ---------------------------------------------------
   enable_kubernetes_tags = false

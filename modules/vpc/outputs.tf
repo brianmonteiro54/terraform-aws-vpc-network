@@ -100,3 +100,16 @@ output "availability_zones" {
   description = "List of availability zones used"
   value       = local.azs
 }
+
+# =============================================================================
+# VPC Endpoint Outputs
+# =============================================================================
+output "s3_endpoint_id" {
+  description = "The ID of the S3 gateway VPC endpoint"
+  value       = try(aws_vpc_endpoint.s3[0].id, null)
+}
+
+output "dynamodb_endpoint_id" {
+  description = "The ID of the DynamoDB gateway VPC endpoint"
+  value       = try(aws_vpc_endpoint.dynamodb[0].id, null)
+}
